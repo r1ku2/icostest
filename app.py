@@ -1,28 +1,45 @@
-from flask import Flask
+from flask import Flask, request, redirect, render_template_string
 import os
-import ibm_boto3
-from ibm_botocore.client import Config, ClientError
+
 
 app = Flask(__name__)
 
-def create_text_file(bucket_name, item_name, file_text):
-    print("Creating new item: {0}".format(item_name))
-    try:
-        cos_client.put_object(
-            Bucket=bucket_name,
-            Key=item_name,
-            Body=file_text
-        )
-        print("Item: {0} created!".format(item_name))
-    except ClientError as be:
-        print("CLIENT ERROR: {0}\n".format(be))
-    except Exception as e:
-        print("Unable to create text file: {0}".format(e))
+STORAGE_PATH = "/mnt/storage"
+TEXT_FILE_PATH = os.path.join(STORAGE_PATH, "user_input.txt")
 
-@app.route("/")
-def hello():
-    name = os.getenv("test", "World")
-    return f"Hello from Code Engine, {name}!\n"
+@app.route("/", methods=["GET", "POST"])
+def handle_text():
+    message = ""
+    if request.method == "POST":
+        user_text = request.form.get("text_input", "")
+        try:
+            with open(TEXT_FILE_PATH, "w") as f:
+                f.write(user_text)
+            message = "✅ テキストが保存されました！"
+        except Exception as e:
+            message = f"❌ エラー: {str(e)}"
+
+    # 入力フォームのHTML
+    template = """
+    <h1>Text Input Form</h1>
+    <form method="POST">
+        <textarea name="text_input" rows="10" cols="50" placeholder="ここにテキストを入力"></textarea><br>
+        <button type="submit">保存</button>
+    </form>
+    <p>{{ message }}</p>
+    {% if saved_text %}
+    <h2>保存済みテキスト:</h2>
+    <pre>{{ saved_text }}</pre>
+    {% endif %}
+    """
+
+    # 保存済みのテキストを読み込む（あれば表示）
+    saved_text = ""
+    if os.path.exists(TEXT_FILE_PATH):
+        with open(TEXT_FILE_PATH, "r") as f:
+            saved_text = f.read()
+
+    return render_template_string(template, message=message, saved_text=saved_text)
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8080))
