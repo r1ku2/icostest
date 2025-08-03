@@ -21,7 +21,7 @@ def create_text_file(bucket_name, item_name, file_text):
 
 @app.route("/")
 def hello():
-    name = os.getenv("TEST", "World")
+    name = os.getenv("test", "World")
     return f"Hello from Code Engine, {name}!\n"
 
 if __name__ == "__main__":
