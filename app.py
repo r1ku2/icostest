@@ -15,9 +15,9 @@ def handle_text():
         try:
             with open(TEXT_FILE_PATH, "w") as f:
                 f.write(user_text)
-            message = "✅ テキストが保存されました！"
+            message = "テキストが保存されました"
         except Exception as e:
-            message = f"❌ エラー: {str(e)}"
+            message = f"エラー: {str(e)}"
 
     # 入力フォームのHTML
     template = """
